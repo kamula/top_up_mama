@@ -28,3 +28,14 @@ def get_name_authors_comments(request):
         item = {}
         item['message'] = 'request failed'
     return Response(item, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET', ])
+def get_character_list(request,id):
+    # get character list
+    context = {}
+    url = f"https://www.anapioficeandfire.com/api/books/{id}"    
+    data = requests.get(url)
+    book_characters = data.json()["characters"]
+    context["characters"] = book_characters    
+    return Response(context, status=status.HTTP_200_OK)
