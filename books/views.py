@@ -31,11 +31,13 @@ def get_name_authors_comments(request):
 
 
 @api_view(['GET', ])
-def get_character_list(request,id):
+def get_character_list(request, id):
     # get character list
     context = {}
-    url = f"https://www.anapioficeandfire.com/api/books/{id}"    
+    # pass the book id into the url
+    url = f"https://www.anapioficeandfire.com/api/books/{id}"
     data = requests.get(url)
+    # GET the book characters
     book_characters = data.json()["characters"]
-    context["characters"] = book_characters    
+    context["characters"] = book_characters
     return Response(context, status=status.HTTP_200_OK)
