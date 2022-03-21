@@ -1,8 +1,10 @@
+import requests
+from rest_framework import status
 from django.shortcuts import render
 from rest_framework.response import Response
-from rest_framework import status
-import requests
 from rest_framework.decorators import api_view
+from .serializers import BookCommentSerializer
+from . models import BookComment
 
 
 @api_view(['GET', ])
@@ -44,6 +46,39 @@ def get_character_list(request, id):
         book_characters = data.json()["characters"]
         context["characters"] = book_characters
         return Response(context, status=status.HTTP_200_OK)
+    else:
+        # return error message and 400 error message if there is an error
+        context["message"] = "Error"
+        return Response(context, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST', ])
+def add_get_comment(request, id):
+    # get character list
+    context = {}
+    # pass the book id into the url
+    url = f"https://www.anapioficeandfire.com/api/books/{id}"
+    data = requests.get(url)
+    if data.status_code == status.HTTP_200_OK:
+        book_data = request.data
+        book_data['id'] = id
+        serializer = BookCommentSerializer(data=book_data)
+        list_characters = data.json()['povCharacters']
+        # check if serializer is valid
+        if serializer.is_valid():
+            # save data if valid and return it as response
+            serializer.save()
+            saved_data_query = BookComment.objects.filter(id=id)
+            serialized_data = BookCommentSerializer(
+                saved_data_query, many=True)
+            for item in serialized_data.data:
+                list_characters.append(item['comment'])
+            context['comment_count'] = len(list_characters)
+            context['book_id'] = id
+            context['comments'] = list_characters
+            return Response(context, status=status.HTTP_200_OK)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     else:
         # return error message and 400 error message if there is an error
         context["message"] = "Error"
