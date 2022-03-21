@@ -21,7 +21,9 @@ def get_name_authors_comments(request):
             item['name'] = i['name']
             item['authors'] = i['authors']
             item['comment_count'] = len(i['povCharacters'])
+            item['released'] = i['released']
             final_data.append(item)
+        final_data.sort(key=lambda item: item['released'], reverse=False)
         return Response(final_data, status=status.HTTP_200_OK)
     # if response != 200 return error message + request failed status code
     else:
@@ -37,7 +39,12 @@ def get_character_list(request, id):
     # pass the book id into the url
     url = f"https://www.anapioficeandfire.com/api/books/{id}"
     data = requests.get(url)
-    # GET the book characters
-    book_characters = data.json()["characters"]
-    context["characters"] = book_characters
-    return Response(context, status=status.HTTP_200_OK)
+    if data.status_code == status.HTTP_200_OK:
+        # GET the book characters
+        book_characters = data.json()["characters"]
+        context["characters"] = book_characters
+        return Response(context, status=status.HTTP_200_OK)
+    else:
+        # return error message and 400 error message if there is an error
+        context["message"] = "Error"
+        return Response(context, status=status.HTTP_400_BAD_REQUEST)
